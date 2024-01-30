@@ -1,13 +1,13 @@
 package study.datajpa5.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import study.datajpa5.repository.MemberRepository;
 
 import java.util.List;
 
@@ -21,6 +21,9 @@ class MemberTest {
 
     @PersistenceContext
     EntityManager em;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Test
     void testEntity() {
@@ -51,4 +54,45 @@ class MemberTest {
         }
     }
 
+    @Test
+    void JpaEventBaseEntity() throws InterruptedException {
+        // given
+        Member member = new Member("member1");
+        memberRepository.save(member); // @PrePersist 가 호출됨
+
+        Thread.sleep(1000);
+        member.setUsername("member2");
+
+        em.flush(); // @PreUpdate 가 호출됨
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findById(member.getId()).get();
+
+        // then
+        System.out.println("findMember.getCreatedDate = " + findMember.getCreatedDate());
+//        System.out.println("findMember.getUpdateDate = " + findMember.getUpdateDate());
+    }
+
+    @Test
+    void baseEntity() throws InterruptedException {
+        // given
+        Member member = new Member("member1");
+        memberRepository.save(member); // @PrePersist 가 호출됨
+
+        Thread.sleep(1000);
+        member.setUsername("member2");
+
+        em.flush(); // @PreUpdate 가 호출됨
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findById(member.getId()).get();
+
+        // then
+        System.out.println("findMember.getCreatedDate = " + findMember.getCreatedDate());
+        System.out.println("findMember.getUpdateDate = " + findMember.getLastModifiedDate());
+        System.out.println("findMember.getCreatedBy = " + findMember.getCreatedBy());
+        System.out.println("findMember.getLastModifiedBy = " + findMember.getLastModifiedBy());
+    }
 }

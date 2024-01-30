@@ -229,7 +229,8 @@ class MemberRepositoryTest {
         // when
 //        List<Member> members = memberRepository.findMemberFetchJoin();
         //EntityGraph 사용
-        List<Member> members = memberRepository.findAll();
+//        List<Member> members = memberRepository.findAll();
+        List<Member> members = memberRepository.findEntityGraphByUsername("member1");
 
         // then
         for (Member member : members) {
@@ -239,4 +240,32 @@ class MemberRepositoryTest {
         }
     }
 
+    @Test
+    void queryHint() {
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        Member findMember = memberRepository.findReadOnlyByUsername(member1.getUsername());
+        // QueryHints로 변경감지 체크를 하지 않아서 변경되지 않음
+        findMember.setUsername("member2");
+
+        em.flush();
+    }
+
+    @Test
+    void lock() {
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        memberRepository.findLockByUsername(member1.getUsername());
+    }
+
+    @Test
+    void callCustom() {
+        memberRepository.findMemberCustom();
+    }
 }
